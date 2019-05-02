@@ -3,6 +3,8 @@
  *
  * author Albert Kalkowski
  *
+ * source need refactor and bugfix but now i have no time :)
+ *
  */
 
 #include "Arduino.h"
