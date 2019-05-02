@@ -1,3 +1,10 @@
+/*
+ * AFFA2 Renault display (CAN) library
+ *
+ * author Albert Kalkowski
+ *
+ */
+
 #include "Arduino.h"
 //The setup function is called once at startup of the sketch
 #include <SPI.h>
@@ -5,21 +12,16 @@
 
 struct can_frame canMsg;
 struct can_frame radioPck;
-String serialMsg;
-
+String serialMsg = "";
+int dex = 0;
 MCP2515 mcp2515(10);
 
 void setup() {
 	Serial.begin(115200);
 	SPI.begin();
-
 	mcp2515.reset();
 	mcp2515.setBitrate(CAN_1000KBPS);
 	mcp2515.setNormalMode();
-	serialMsg = "";
-	Serial.println("------- CAN Read ----------");
-	Serial.println("ID  DLC   DATA");
-
 }
 
 bool readPck() {
@@ -29,7 +31,6 @@ bool readPck() {
 	} else {
 		return false;
 	}
-
 }
 
 void readMsg() {
@@ -278,8 +279,6 @@ void syncLcd() {
 		radioPck.data[7] = 0x81;
 		mcp2515.sendMessage(&radioPck);
 	} else {
-//		Serial.print("RESP ID: ");
-//		Serial.println(canMsg.can_id, HEX);
 		radioPck.can_id = canMsg.can_id + 0x400;
 		radioPck.can_dlc = 8;
 		radioPck.data[0] = 0x74;
@@ -293,35 +292,6 @@ void syncLcd() {
 		mcp2515.sendMessage(&radioPck);
 	}
 	printRadioPck();
-
-//	if (canMsg.can_id != 0x1C1) {
-//		radioPck.can_id = 0x5C1;
-//		radioPck.can_dlc = 8;
-//		radioPck.data[0] = 0x74;
-//		radioPck.data[1] = 0x91;
-//		radioPck.data[2] = 0x81;
-//		radioPck.data[3] = 0x81;
-//		radioPck.data[4] = 0x81;
-//		radioPck.data[5] = 0x81;
-//		radioPck.data[6] = 0x81;
-//		radioPck.data[7] = 0x81;
-//		mcp2515.sendMessage(&radioPck);
-//		return true;
-//	} else if (canMsg.can_id != 0x0A9) {
-//		radioPck.can_id = 0x4A9;
-//		radioPck.can_dlc = 8;
-//		radioPck.data[0] = 0x79;
-//		radioPck.data[1] = 0x81;
-//		radioPck.data[2] = 0x81;
-//		radioPck.data[3] = 0x81;
-//		radioPck.data[4] = 0x81;
-//		radioPck.data[5] = 0x81;
-//		radioPck.data[6] = 0x81;
-//		radioPck.data[7] = 0x81;
-//		mcp2515.sendMessage(&radioPck);
-//		return true;
-//	}
-//	return false;
 }
 
 void radioOn() {
@@ -351,7 +321,6 @@ void show_text(char old[8], char newx[12]) {
 
 	/* Budujemy pakiety */
 	packets[0].can_id = 0x121;
-//	packets[0].rtr = 0;
 	packets[0].can_dlc = 8;
 	packets[0].data[0] = 0x10;
 	packets[0].data[1] = 0x19;
@@ -363,7 +332,6 @@ void show_text(char old[8], char newx[12]) {
 	packets[0].data[7] = old[2];
 
 	packets[1].can_id = 0x121;
-//	packets[1].rtr = 0;
 	packets[1].can_dlc = 8;
 	packets[1].data[0] = 0x21;
 	packets[1].data[1] = old[3];
@@ -375,7 +343,6 @@ void show_text(char old[8], char newx[12]) {
 	packets[1].data[7] = newx[0];
 
 	packets[2].can_id = 0x121;
-//	packets[2].rtr = 0;
 	packets[2].can_dlc = 8;
 	packets[2].data[0] = 0x22;
 	packets[2].data[1] = newx[1];
@@ -387,7 +354,6 @@ void show_text(char old[8], char newx[12]) {
 	packets[2].data[7] = newx[7];
 
 	packets[3].can_id = 0x121;
-//	packets[3].rtr = 0;
 	packets[3].can_dlc = 8;
 	packets[3].data[0] = 0x23;
 	packets[3].data[1] = newx[8];
@@ -444,7 +410,7 @@ void loop() {
 		syncLcd();
 		readKey();
 	}
-//	serialMessage();
+	serialMessage();
 //	readMsg();
 }
 
@@ -537,30 +503,33 @@ void printRadioPck() {
 }
 
 void printCanPck() {
-	if (canMsg.can_id == 0x3CF) {
-		Serial.print("LCD: ");
-	} else if (canMsg.can_id == 0x3DF) {
-		Serial.print("RAD: ");
-	} else {
-		Serial.print("REC: ");
-	}
-	Serial.print(canMsg.can_id, HEX); // print ID
-	Serial.print(" ");
-	Serial.print(canMsg.can_dlc, HEX); // print DLC
-	Serial.print(" ");
-	for (int i = 0; i < canMsg.can_dlc; i++) {  // print the data
-		Serial.print(canMsg.data[i], HEX);
-		Serial.print(" ");
-	}
-	Serial.println();
+//	if (canMsg.can_id == 0x3CF) {
+//		Serial.print("LCD: ");
+//	} else if (canMsg.can_id == 0x3DF) {
+//		Serial.print("RAD: ");
+//	} else {
+//		Serial.print("REC: ");
+//	}
+//	Serial.print(canMsg.can_id, HEX); // print ID
+//	Serial.print(" ");
+//	Serial.print(canMsg.can_dlc, HEX); // print DLC
+//	Serial.print(" ");
+//	for (int i = 0; i < canMsg.can_dlc; i++) {  // print the data
+//		Serial.print(canMsg.data[i], HEX);
+//		Serial.print(" ");
+//	}
+//	Serial.println();
 }
 
 void serialMessage() {
-	serialMsg = Serial.readString();
-	if (serialMsg != "") {
-		showMessage(serialMsg);
+	dex++;
+	if (dex > 40) {
+		dex = 0;
+		serialMsg = Serial.readString();
+		if (serialMsg != "") {
+			showMessage(serialMsg);
+		}
 	}
-
 }
 
 void sendPingPck() {
