@@ -53,7 +53,7 @@ void readKey() {
 	if (canMsg.can_id == 0xA9) {
 		if (canMsg.data[2] == 0x00) {
 			if (canMsg.data[3] == 0x00) {
-				onKeyDown();
+				onKeyLoad();
 			} else if (canMsg.data[3] == 0x01) {
 				onKeySrcRight();
 			} else if (canMsg.data[3] == 0x02) {
@@ -71,7 +71,7 @@ void readKey() {
 			} else if (canMsg.data[3] == 0x85) {
 				onKeyMuteHold();
 			} else if (canMsg.data[3] == 0x80) {
-				onKeyDownHold();
+				onKeyLoadHold();
 			} else if (canMsg.data[3] == 0x82) {
 				onKeySrcLefttHold();
 			} else if (canMsg.data[3] == 0x81) {
@@ -259,20 +259,12 @@ void syncLcd() {
 		delay(1);
 		enableDisplay();
 		delay(1);
+		enableDisplay();
+		delay(1);
 		radioOn();
 
 	} else if (canMsg.can_id == 0x3CF) {
-		radioPck.can_id = 0x3DF;
-		radioPck.can_dlc = 8;
-		radioPck.data[0] = 0x79;
-		radioPck.data[1] = 0x00;
-		radioPck.data[2] = 0x81;
-		radioPck.data[3] = 0x81;
-		radioPck.data[4] = 0x81;
-		radioPck.data[5] = 0x81;
-		radioPck.data[6] = 0x81;
-		radioPck.data[7] = 0x81;
-		mcp2515.sendMessage(&radioPck);
+		sendPingPck();
 	} else if (canMsg.can_id == 0xA9) {
 		radioPck.can_id = 0x4A9;
 		radioPck.can_dlc = 8;
@@ -452,8 +444,7 @@ void loop() {
 		syncLcd();
 		readKey();
 	}
-		serialMessage();
-
+//	serialMessage();
 //	readMsg();
 }
 
@@ -497,7 +488,7 @@ void onKeySrcRight() {
 	showMessage("SRC RIGHT");
 }
 
-void onKeyDown() {
+void onKeyLoad() {
 	Serial.println("onKeyDown");
 	showMessage("KEY LOAD");
 }
@@ -512,19 +503,19 @@ void onRolDown() {
 	showMessage("ROL DOWN");
 }
 
-void onKeyDownHold() {
+void onKeyLoadHold() {
 	Serial.println("onKeyDownHold");
-	showMessage("HOLD1");
+	showMessage("LOAD HOLD");
 }
 
 void onKeySrcLefttHold() {
 	Serial.println("onKeySrcLefttHold");
-	showMessage("HOLD1");
+	showMessage("LEFT HOLD");
 }
 
 void onKeySrcRightHold() {
 	Serial.println("onKeySrcRightHold");
-	showMessage("HOLD1");
+	showMessage("RIGHT HOLD");
 }
 
 void onKeyHold2() {
@@ -572,3 +563,17 @@ void serialMessage() {
 
 }
 
+void sendPingPck() {
+	radioPck.can_id = 0x3DF;
+	radioPck.can_dlc = 8;
+	radioPck.data[0] = 0x79;
+	radioPck.data[1] = 0x00;
+	radioPck.data[2] = 0x81;
+	radioPck.data[3] = 0x81;
+	radioPck.data[4] = 0x81;
+	radioPck.data[5] = 0x81;
+	radioPck.data[6] = 0x81;
+	radioPck.data[7] = 0x81;
+	mcp2515.sendMessage(&radioPck);
+	delay(1);
+}
