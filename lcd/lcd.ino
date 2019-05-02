@@ -5,6 +5,7 @@
 
 struct can_frame canMsg;
 struct can_frame radioPck;
+String serialMsg;
 
 MCP2515 mcp2515(10);
 
@@ -15,184 +16,138 @@ void setup() {
 	mcp2515.reset();
 	mcp2515.setBitrate(CAN_1000KBPS);
 	mcp2515.setNormalMode();
-
+	serialMsg = "";
 	Serial.println("------- CAN Read ----------");
 	Serial.println("ID  DLC   DATA");
-	radioOn();
-//	enableDisplay();
+
+}
+
+bool readPck() {
+	if (mcp2515.readMessage(&canMsg) == MCP2515::ERROR_OK) {
+		printCanPck();
+		return true;
+	} else {
+		return false;
+	}
 
 }
 
 void readMsg() {
 	if (mcp2515.readMessage(&canMsg) == MCP2515::ERROR_OK) {
 //		if ((canMsg.can_id != 0x3CF) && (canMsg.can_id != 0x3DF)) {
-
-			Serial.print(canMsg.can_id, HEX); // print ID
+		Serial.print(canMsg.can_id, HEX); // print ID
+		Serial.print(" ");
+		Serial.print(canMsg.can_dlc, HEX); // print DLC
+		Serial.print(" ");
+		for (int i = 0; i < canMsg.can_dlc; i++) {  // print the data
+			Serial.print(canMsg.data[i], HEX);
 			Serial.print(" ");
-			Serial.print(canMsg.can_dlc, HEX); // print DLC
-			Serial.print(" ");
-
-			for (int i = 0; i < canMsg.can_dlc; i++) {  // print the data
-
-				Serial.print(canMsg.data[i], HEX);
-				Serial.print(" ");
-
-			}
-
-			Serial.println();
+		}
+		Serial.println();
 //		}
 	}
 
 }
 
 void readKey() {
-	if (mcp2515.readMessage(&canMsg) == MCP2515::ERROR_OK) {
-
-//		if ((canMsg.can_id != 0x3CF) && (canMsg.can_id != 0x3DF)) {
-//
-//			Serial.print(canMsg.can_id, HEX); // print ID
-//			Serial.print(" ");
-//			Serial.print(canMsg.can_dlc, HEX); // print DLC
-//			Serial.print(" ");
-//
-//			for (int i = 0; i < canMsg.can_dlc; i++) {  // print the data
-//
-//				Serial.print(canMsg.data[i], HEX);
-//				Serial.print(" ");
-//
-//			}
-//			Serial.println();
-//		}
-
-		syncLcd();
-
-//		if (not syncLcd()) {
-//			Serial.print("not sync ");
-		if (canMsg.can_id == 0xA9) {
-			Serial.println("keys ");
-			Serial.print(canMsg.can_id, HEX); // print ID
-			Serial.print(" ");
-			Serial.print(canMsg.can_dlc, HEX); // print DLC
-			Serial.print(" ");
-
-			for (int i = 0; i < canMsg.can_dlc; i++) {  // print the data
-
-				Serial.print(canMsg.data[i], HEX);
-				Serial.print(" ");
-
-			}
-			Serial.println();
-			if (canMsg.data[2] == 0x00) {
-				if (canMsg.data[3] == 0x00) {
-					onKeyDown();
-				} else if (canMsg.data[3] == 0x01) {
-					onKeySrcRight();
-				} else if (canMsg.data[3] == 0x02) {
-					onKeySrcLeft();
-				} else if (canMsg.data[3] == 0x03) {
-					onKeyVolUp();
-				} else if (canMsg.data[3] == 0x43) {
-					onKeyVolUpHold();
-				} else if (canMsg.data[3] == 0x04) {
-					onKeyVolDown();
-				} else if (canMsg.data[3] == 0x44) {
-					onKeyVolDownHold();
-				} else if (canMsg.data[3] == 0x05) {
-					onKeyMute();
-				} else if (canMsg.data[3] == 0x85) {
-					onKeyMuteHold();
-				} else if (canMsg.data[3] == 0x80) {
-					onKeyDownHold();
-				} else if (canMsg.data[3] == 0x82) {
-					onKeySrcLefttHold();
-				} else if (canMsg.data[3] == 0x81) {
-					onKeySrcRightHold();
-				} else if (canMsg.data[3] == 0x40) {
-					onKeyHold2();
-				}
-
-			} else if (canMsg.data[2] == 0x01) {
-				if (canMsg.data[3] == 0x01) {
-					onRolDown();
-				} else if (canMsg.data[3] == 0x41) {
-					onRolUp();
-				}
+	if (canMsg.can_id == 0xA9) {
+		if (canMsg.data[2] == 0x00) {
+			if (canMsg.data[3] == 0x00) {
+				onKeyDown();
+			} else if (canMsg.data[3] == 0x01) {
+				onKeySrcRight();
+			} else if (canMsg.data[3] == 0x02) {
+				onKeySrcLeft();
+			} else if (canMsg.data[3] == 0x03) {
+				onKeyVolUp();
+			} else if (canMsg.data[3] == 0x43) {
+				onKeyVolUpHold();
+			} else if (canMsg.data[3] == 0x04) {
+				onKeyVolDown();
+			} else if (canMsg.data[3] == 0x44) {
+				onKeyVolDownHold();
+			} else if (canMsg.data[3] == 0x05) {
+				onKeyMute();
+			} else if (canMsg.data[3] == 0x85) {
+				onKeyMuteHold();
+			} else if (canMsg.data[3] == 0x80) {
+				onKeyDownHold();
+			} else if (canMsg.data[3] == 0x82) {
+				onKeySrcLefttHold();
+			} else if (canMsg.data[3] == 0x81) {
+				onKeySrcRightHold();
+			} else if (canMsg.data[3] == 0x40) {
+				onKeyHold2();
 			}
 
-//			}
-
-		}
-
-	}
-
-}
-
-void readMsg2() {
-	if (mcp2515.readMessage(&canMsg) == MCP2515::ERROR_OK) {
-
-		Serial.print(canMsg.can_id, HEX); // print ID
-		Serial.print(" ");
-		Serial.print(canMsg.can_dlc, HEX); // print DLC
-		Serial.print(" ");
-
-		for (int i = 0; i < canMsg.can_dlc; i++) {  // print the data
-
-			Serial.print(canMsg.data[i], HEX);
-			Serial.print(" ");
-
-		}
-
-		Serial.println();
-
-	}
-
-}
-
-bool readMs() {
-	if (mcp2515.readMessage(&canMsg) == MCP2515::ERROR_OK) {
-
-		if ((canMsg.can_id == 0x521)) {
-
-			Serial.print(canMsg.can_id, HEX); // print ID
-			Serial.print(" ");
-			Serial.print(canMsg.can_dlc, HEX); // print DLC
-			Serial.print(" ");
-
-			for (int i = 0; i < canMsg.can_dlc; i++) {  // print the data
-
-				Serial.print(canMsg.data[i], HEX);
-				Serial.print(" ");
-
+		} else if (canMsg.data[2] == 0x01) {
+			if (canMsg.data[3] == 0x01) {
+				onRolDown();
+			} else if (canMsg.data[3] == 0x41) {
+				onRolUp();
 			}
-
-			Serial.println();
-			return true;
 		}
 	}
-	return false;
 
 }
-void enableDisplay() {
-	can_frame enableDispMsg = { 0x04, 0x52, 0x02, 0xFF, 0xFF, 0x81, 0x81, 0x81 };
-	enableDispMsg.can_dlc = 8;
-	enableDispMsg.data[0] = 0x04;
-	enableDispMsg.data[1] = 0x52;
-	enableDispMsg.data[2] = 0x02;
-	enableDispMsg.data[3] = 0xFF;
-	enableDispMsg.data[4] = 0xFF;
-	enableDispMsg.data[5] = 0x81;
-	enableDispMsg.data[6] = 0x81;
-	enableDispMsg.data[7] = 0x81;
 
-	mcp2515.sendMessage(&enableDispMsg);
-}
-
-void syncLcd() {
-//3DF 8 79 0 81 81 81 81 81 81
-
-//		if (canMsg.can_id != 0x3CF) {
-	radioPck.can_id = canMsg.can_id + 0x400;
+void pck1() {
+	radioPck.can_id = 0x5C1;
 	radioPck.can_dlc = 8;
+	radioPck.data[0] = 0x74;
+	radioPck.data[1] = 0x81;
+	radioPck.data[2] = 0x81;
+	radioPck.data[3] = 0x81;
+	radioPck.data[4] = 0x81;
+	radioPck.data[5] = 0x81;
+	radioPck.data[6] = 0x81;
+	radioPck.data[7] = 0x81;
+	if (mcp2515.sendMessage(&radioPck) != MCP2515::ERROR_OK) {
+		Serial.println("pck1 on Error");
+	} else {
+		printRadioPck();
+	}
+}
+
+void pck2() {
+	radioPck.can_id = 0x4A9;
+	radioPck.can_dlc = 8;
+	radioPck.data[0] = 0x74;
+	radioPck.data[1] = 0x81;
+	radioPck.data[2] = 0x81;
+	radioPck.data[3] = 0x81;
+	radioPck.data[4] = 0x81;
+	radioPck.data[5] = 0x81;
+	radioPck.data[6] = 0x81;
+	radioPck.data[7] = 0x81;
+	if (mcp2515.sendMessage(&radioPck) != MCP2515::ERROR_OK) {
+		Serial.println("pck2 on Error");
+	} else {
+		printRadioPck();
+	}
+}
+
+void startSync() {
+	radioPck.can_dlc = 8;
+	radioPck.can_id = 0x3DF;
+	radioPck.data[0] = 0x7A;
+	radioPck.data[1] = 0x01;
+	radioPck.data[2] = 0x81;
+	radioPck.data[3] = 0x81;
+	radioPck.data[4] = 0x81;
+	radioPck.data[5] = 0x81;
+	radioPck.data[6] = 0x81;
+	radioPck.data[7] = 0x81;
+	if (mcp2515.sendMessage(&radioPck) != MCP2515::ERROR_OK) {
+		Serial.println("startSync on Error");
+	} else {
+		printRadioPck();
+	}
+}
+
+void syncOK() {
+	radioPck.can_dlc = 8;
+	radioPck.can_id = 0x3DF;
 	radioPck.data[0] = 0x79;
 	radioPck.data[1] = 0x00;
 	radioPck.data[2] = 0x81;
@@ -201,22 +156,151 @@ void syncLcd() {
 	radioPck.data[5] = 0x81;
 	radioPck.data[6] = 0x81;
 	radioPck.data[7] = 0x81;
-	mcp2515.sendMessage(&radioPck);
-//		}
+	if (mcp2515.sendMessage(&radioPck) != MCP2515::ERROR_OK) {
+		Serial.println("syncOK on Error");
+	} else {
+		printRadioPck();
+	}
+}
 
-//	if (canMsg.can_id != 0x3CF) {
-//		radioPck.can_id = 0x3DF;
-//		radioPck.can_dlc = 8;
-//		radioPck.data[0] = 0x79;
-//		radioPck.data[1] = 0x00;
-//		radioPck.data[2] = 0x81;
-//		radioPck.data[3] = 0x81;
-//		radioPck.data[4] = 0x81;
-//		radioPck.data[5] = 0x81;
-//		radioPck.data[6] = 0x81;
-//		radioPck.data[7] = 0x81;
-//		mcp2515.sendMessage(&radioPck);
-//	} else
+void syncDisp() {
+	radioPck.can_dlc = 8;
+	radioPck.can_id = 0x3DF;
+	radioPck.data[0] = 0x70;
+	radioPck.data[1] = 0x1A;
+	radioPck.data[2] = 0x11;
+	radioPck.data[3] = 0x00;
+	radioPck.data[4] = 0x00;
+	radioPck.data[5] = 0x00;
+	radioPck.data[6] = 0x00;
+	radioPck.data[7] = 0x01;
+	if (mcp2515.sendMessage(&radioPck) != MCP2515::ERROR_OK) {
+		Serial.println("syncDisp on Error");
+	} else {
+		printRadioPck();
+	}
+}
+
+void registerDisplay() {
+	radioPck.can_dlc = 8;
+	radioPck.can_id = 0x1B1;
+	radioPck.data[0] = 0x70;
+	radioPck.data[1] = 0x81;
+	radioPck.data[2] = 0x81;
+	radioPck.data[3] = 0x81;
+	radioPck.data[4] = 0x81;
+	radioPck.data[5] = 0x81;
+	radioPck.data[6] = 0x81;
+	radioPck.data[7] = 0x81;
+	if (mcp2515.sendMessage(&radioPck) != MCP2515::ERROR_OK) {
+		Serial.println("registerDisplay on Error");
+	} else {
+		printRadioPck();
+	}
+}
+
+void enableDisplay() {
+	radioPck.can_dlc = 8;
+	radioPck.can_id = 0x1B1;
+	radioPck.data[0] = 0x04;
+	radioPck.data[1] = 0x52;
+	radioPck.data[2] = 0x02;
+	radioPck.data[3] = 0xFF;
+	radioPck.data[4] = 0xFF;
+	radioPck.data[5] = 0x81;
+	radioPck.data[6] = 0x81;
+	radioPck.data[7] = 0x81;
+	if (mcp2515.sendMessage(&radioPck) != MCP2515::ERROR_OK) {
+		Serial.println("enableDisplay on Error");
+	} else {
+		printRadioPck();
+	}
+}
+
+void initDisplay() {
+	radioPck.can_dlc = 8;
+	radioPck.can_id = 0x121;
+	radioPck.data[0] = 0x70;
+	radioPck.data[1] = 0x81;
+	radioPck.data[2] = 0x81;
+	radioPck.data[3] = 0x81;
+	radioPck.data[4] = 0x81;
+	radioPck.data[5] = 0x81;
+	radioPck.data[6] = 0x81;
+	radioPck.data[7] = 0x81;
+	if (mcp2515.sendMessage(&radioPck) != MCP2515::ERROR_OK) {
+		Serial.println("initDisplay on Error");
+	} else {
+		printRadioPck();
+	}
+}
+
+void syncLcd() {
+	if ((canMsg.can_id == 0x3CF) && (canMsg.data[0] == 0x61)
+			&& (canMsg.data[1] == 0x11) // && (canMsg.data[2] == 0x00)
+			&& (canMsg.data[3] == 0xA2) && (canMsg.data[4] == 0xA2)
+			&& (canMsg.data[5] == 0xA2) && (canMsg.data[6] == 0xA2)
+			&& (canMsg.data[7] == 0xA2)) {
+		Serial.println("LCD SYNC");
+		printCanPck();
+		startSync();
+		delay(1);
+		syncOK();
+		delay(1);
+		syncDisp();
+		delay(1);
+		pck1();
+		delay(1);
+		pck2();
+		delay(1);
+		initDisplay();
+		delay(1);
+		registerDisplay();
+		delay(1);
+		enableDisplay();
+		delay(1);
+		radioOn();
+
+	} else if (canMsg.can_id == 0x3CF) {
+		radioPck.can_id = 0x3DF;
+		radioPck.can_dlc = 8;
+		radioPck.data[0] = 0x79;
+		radioPck.data[1] = 0x00;
+		radioPck.data[2] = 0x81;
+		radioPck.data[3] = 0x81;
+		radioPck.data[4] = 0x81;
+		radioPck.data[5] = 0x81;
+		radioPck.data[6] = 0x81;
+		radioPck.data[7] = 0x81;
+		mcp2515.sendMessage(&radioPck);
+	} else if (canMsg.can_id == 0xA9) {
+		radioPck.can_id = 0x4A9;
+		radioPck.can_dlc = 8;
+		radioPck.data[0] = 0x74;
+		radioPck.data[1] = 0x81;
+		radioPck.data[2] = 0x81;
+		radioPck.data[3] = 0x81;
+		radioPck.data[4] = 0x81;
+		radioPck.data[5] = 0x81;
+		radioPck.data[6] = 0x81;
+		radioPck.data[7] = 0x81;
+		mcp2515.sendMessage(&radioPck);
+	} else {
+//		Serial.print("RESP ID: ");
+//		Serial.println(canMsg.can_id, HEX);
+		radioPck.can_id = canMsg.can_id + 0x400;
+		radioPck.can_dlc = 8;
+		radioPck.data[0] = 0x74;
+		radioPck.data[1] = 0x81;
+		radioPck.data[2] = 0x81;
+		radioPck.data[3] = 0x81;
+		radioPck.data[4] = 0x81;
+		radioPck.data[5] = 0x81;
+		radioPck.data[6] = 0x81;
+		radioPck.data[7] = 0x81;
+		mcp2515.sendMessage(&radioPck);
+	}
+	printRadioPck();
 
 //	if (canMsg.can_id != 0x1C1) {
 //		radioPck.can_id = 0x5C1;
@@ -231,7 +315,7 @@ void syncLcd() {
 //		radioPck.data[7] = 0x81;
 //		mcp2515.sendMessage(&radioPck);
 //		return true;
-//	} else 	if (canMsg.can_id != 0x0A9) {
+//	} else if (canMsg.can_id != 0x0A9) {
 //		radioPck.can_id = 0x4A9;
 //		radioPck.can_dlc = 8;
 //		radioPck.data[0] = 0x79;
@@ -250,7 +334,7 @@ void syncLcd() {
 
 void radioOn() {
 //3DF 8 79 0 81 81 81 81 81 81
-	Serial.println("Radio on");
+//	Serial.println("Radio on");
 	radioPck.can_id = 0x1B1;
 	radioPck.can_dlc = 8;
 	radioPck.data[0] = 0x08;
@@ -263,7 +347,9 @@ void radioOn() {
 	radioPck.data[7] = 0x81;
 	if (mcp2515.sendMessage(&radioPck) != MCP2515::ERROR_OK) {
 		Serial.println("Radio on Error");
-	};
+	} else {
+		printRadioPck();
+	}
 
 }
 
@@ -359,112 +445,130 @@ void showMessage(String text) {
 	highDisp[11] = text.charAt(11);
 
 	show_text(lowDisp, highDisp);
-
-}
-
-void shortMessage(String text) {
-	showMessage(text);
-//	syncLcd();
-//	delay(1000);
-//	showMessage(" ");
-//	syncLcd();
 }
 
 void loop() {
-//	Serial.println(0x121 + 0x400,HEX);
-//	Serial.print("");
+	if (readPck()) {
+		syncLcd();
+		readKey();
+	}
+		serialMessage();
 
-	readMsg();
-//	readKey();
-//	mcp2515.sendMessage(&radioPck);
-//	showMessage("DANIEL");
-//	delay(1000);
-//
-
-//	showMessage("CHUJU-");
-//	delay(1000);
-
-//	showMessage("YEAR");
-//	delay(1000);
-//
-//	showMessage("ZYCZY");
-//	delay(1000);
-//	showMessage("ALBERT");
-//	delay(1000);
-
+//	readMsg();
 }
 
 void onKeyVolUp() {
 	Serial.println("onKeyVolUp");
-	shortMessage("VOL UP");
+	showMessage("VOL UP");
 }
 
 void onKeyVolUpHold() {
 	Serial.println("onKeyVolUpHold");
-	shortMessage("VOL UP");
+	showMessage("VOL UP");
 }
 
 void onKeyVolDown() {
 	Serial.println("onKeyVolDown");
-	shortMessage("VOL DOWN");
+	showMessage("VOL DOWN");
 }
 
 void onKeyVolDownHold() {
 	Serial.println("onKeyVolDownHold");
-	shortMessage("VOL DOWN");
+	showMessage("VOL DOWN");
 }
 
 void onKeyMute() {
 	Serial.println("onKeyMute");
-	shortMessage("PAUSE");
+	showMessage("PAUSE");
 }
 
 void onKeyMuteHold() {
 	Serial.println("onKeyMuteHold");
-	shortMessage("PAUSE");
+	showMessage("PAUSE");
 }
 
 void onKeySrcLeft() {
 	Serial.println("onKeySrcLeft");
-	shortMessage("SRC LEFT");
+	showMessage("SRC LEFT");
 }
 
 void onKeySrcRight() {
 	Serial.println("onKeySrcRight");
-	shortMessage("SRC RIGHT");
+	showMessage("SRC RIGHT");
 }
 
 void onKeyDown() {
 	Serial.println("onKeyDown");
-	shortMessage("KEY LOAD");
+	showMessage("KEY LOAD");
 }
 
 void onRolUp() {
 	Serial.println("onRolUp");
-	shortMessage("ROL UP");
+	showMessage("ROL UP");
 }
 
 void onRolDown() {
 	Serial.println("onRolDown");
-	shortMessage("ROL DOWN");
+	showMessage("ROL DOWN");
 }
 
 void onKeyDownHold() {
 	Serial.println("onKeyDownHold");
-	shortMessage("HOLD1");
+	showMessage("HOLD1");
 }
 
 void onKeySrcLefttHold() {
 	Serial.println("onKeySrcLefttHold");
-	shortMessage("HOLD1");
+	showMessage("HOLD1");
 }
 
 void onKeySrcRightHold() {
 	Serial.println("onKeySrcRightHold");
-	shortMessage("HOLD1");
+	showMessage("HOLD1");
 }
 
 void onKeyHold2() {
 	Serial.println("onKeyHold2");
-	shortMessage("HOLD2");
+	showMessage("HOLD2");
 }
+
+void printRadioPck() {
+//	Serial.print("SEN: ");
+//	Serial.print(radioPck.can_id, HEX); // print ID
+//	Serial.print(" ");
+//	Serial.print(radioPck.can_dlc, HEX); // print DLC
+//	Serial.print(" ");
+//	for (int i = 0; i < radioPck.can_dlc; i++) {  // print the data
+//		Serial.print(radioPck.data[i], HEX);
+//		Serial.print(" ");
+//	}
+//	Serial.println();
+}
+
+void printCanPck() {
+	if (canMsg.can_id == 0x3CF) {
+		Serial.print("LCD: ");
+	} else if (canMsg.can_id == 0x3DF) {
+		Serial.print("RAD: ");
+	} else {
+		Serial.print("REC: ");
+	}
+	Serial.print(canMsg.can_id, HEX); // print ID
+	Serial.print(" ");
+	Serial.print(canMsg.can_dlc, HEX); // print DLC
+	Serial.print(" ");
+	for (int i = 0; i < canMsg.can_dlc; i++) {  // print the data
+		Serial.print(canMsg.data[i], HEX);
+		Serial.print(" ");
+	}
+	Serial.println();
+}
+
+void serialMessage() {
+	serialMsg = Serial.readString();
+	if (serialMsg != "") {
+		showMessage(serialMsg);
+	}
+
+}
+
