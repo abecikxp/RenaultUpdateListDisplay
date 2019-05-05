@@ -1,5 +1,6 @@
 # RenaultUpdateListDisplay - lib for Renault CAN Radio displays
-# AFFA 2 ( this library can show text on affa 3 - not tested)
+_____________________________________________________________________
+ AFFA 2 ( this library can show text on affa 3 - not tested)
 
  Requirements
 
