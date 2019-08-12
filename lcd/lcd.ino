@@ -11,6 +11,7 @@
 //The setup function is called once at startup of the sketch
 #include <SPI.h>
 #include <mcp2515.h>
+#include <can.h>
 
 struct can_frame canMsg;
 struct can_frame radioPck;
